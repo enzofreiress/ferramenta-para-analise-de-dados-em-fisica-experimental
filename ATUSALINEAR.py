@@ -68,7 +68,7 @@ def main():
     ax1.errorbar(eixo_x, eixo_y, yerr=incerteza_y, xerr=incerteza_x, fmt='o', 
                  color='black', ecolor='red', capsize=3, markersize=4, label='Dados Experimentais')
     ax1.plot(eixo_x,eixo_y, 'b-', label='Ajuste Teórico')
-    ax1.set_ylabel('Tensão (V)')
+    ax1.set_ylabel('Intensidade')
     ax1.set_title(f'Ajuste: a={a:.3f}, b={b:.3f}')
     ax1.legend()
     ax1.grid(True, linestyle='--', alpha=0.6)
@@ -77,8 +77,8 @@ def main():
     # GRÁFICO DE RESIDUOS
     ax2.errorbar(eixo_x, residuos, yerr=incerteza_y, fmt='o', color='black', ecolor='red', capsize=3, markersize=4)
     ax2.axhline(0, color='blue', linestyle='--') # Linha do zero
-    ax2.set_xlabel('Ângulo (Graus)')
-    ax2.set_ylabel('Resíduos (V)')
+    ax2.set_xlabel('Número de Pixels')
+    ax2.set_ylabel('Resíduos')
     ax2.grid(True, linestyle='--', alpha=0.6)
 
     #AJUSTE DE LAYOUT
