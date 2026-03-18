@@ -63,15 +63,11 @@ def main():
     # PLOTAGEM (Gráfico Principal + Resíduos)
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8), gridspec_kw={'height_ratios': [3, 1]})
     
-    # Curva suave para o desenho ficar bonito
-    x_smooth_graus = np.linspace(min(eixo_x), max(eixo_x), 300)
-    x_smooth_rad = np.deg2rad(x_smooth_graus)
-    y_smooth = ajuste(x_smooth_rad, a, b)
 
     # GRÁFICO DO AJUSTE
     ax1.errorbar(eixo_x, eixo_y, yerr=incerteza_y, xerr=incerteza_x, fmt='o', 
                  color='black', ecolor='red', capsize=3, markersize=4, label='Dados Experimentais')
-    ax1.plot(x_smooth_graus, y_smooth, 'b-', label='Ajuste Teórico')
+    ax1.plot(eixo_x,eixo_y, 'b-', label='Ajuste Teórico')
     ax1.set_ylabel('Tensão (V)')
     ax1.set_title(f'Ajuste: a={a:.3f}, b={b:.3f}')
     ax1.legend()
