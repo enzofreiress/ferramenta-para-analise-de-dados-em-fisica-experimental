@@ -1,90 +1,87 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.optimize import curve_fit
+import io
 import pandas as pd
+from scipy.stats import chi2
 
-def ajuste(x, a, b):
-    
-    #INSIRA O AJUSTE AQUI
-    
+def f(a,b,x):
+
+    #definindo a função de ajuste
+
     y=a*x+b
-    
-    
+
     return y
-
-
 
 
 def main():
 
-    #insira abaixo, o diretório onde o arquivo está localizado na sua máquina, certifique-se que ele contém uma coluna para o eixo x e outro para o eixo y 
-    eixo_x, eixo_y = np.loadtxt('Medida_4 H Melhor', unpack=True)
-   
-    # INCERTEZAS
+    fig=plt.figure(figsize=(6,6))
 
-    incerteza_y = np.array([0])
-    incerteza_x = np.array([0])
+    #carregar arquivo
 
-    #A função que faz toda a mágica do programa
+    x,y = np.loadtxt('ajuste_linearH.txt',unpack=True)
 
-    #!lembre-se de adicionar o sigma = incerteza_y ao curve_fit para obtermos os valores corretos da incerteza
+    popt,pcov = curve_fit(f,x,y,p0=None,sigma=None,absolute_sigma=False)    
+
+    a,b = popt
+    a_incerteza = np.sqrt(pcov[0,0])
+    b_incerteza=np.sqrt(pcov[1,1])
+
+
+    x_ajuste=np.linspace(min(x),max(x))
+    y_ajuste=f(x_ajuste,a,b)
+
+
+    ax1 =fig.add_axes([0,0.25,1,0.75])
     
-    popt, pcov = curve_fit(ajuste, eixo_x, eixo_y, absolute_sigma=True, p0=[0.4, 0.3])
-
-    a, b = popt
     
-    # CÁLCULO DAS INCERTEZAS DOS PARÂMETROS
-    # A incerteza é a raiz quadrada da diagonal da matriz de covariância (pcov)
-    perr = np.sqrt(np.diag(pcov))
-    sigma_a, sigma_b = perr
+        #APENAS SE TIVERMOS INCERTEZAS ASSOCIADAS 
+    #ax1.errorbar(x,y,xerr=x,yerr=y,fmt='o',color='red',ecolor='black',ms=0.1,capsize=0.2, label=  "Dados")
 
-    # RESIDUOS E CALCULOS FINAIS
-    # Curva teórica
-    y_model = ajuste(eixo_x, a, b)
-    
-    # Resíduos
-    residuos = eixo_y - y_model
-
-    # Chi-Quadrado
-    chi2 = np.sum((residuos / incerteza_y)**2)
-    ngl = len(eixo_y) - 3 # 3 parametros (a,b)
-    chi2_red = chi2 / ngl
-
-    # Printar resultados bonitinhos no terminal
-    print("-" * 30)
-    print("RESULTADOS DO AJUSTE")
-    print("-" * 30)
-    print(f"a = {a:.5f} +/- {sigma_a:.5f}")
-    print(f"b = {b:.5f} +/- {sigma_b:.5f}")
-    print("-" * 30)
-    print(f"Chi² Reduzido: {chi2_red:.4f}")
-    print("-" * 30)
-
-    # PLOTAGEM (Gráfico Principal + Resíduos)
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 8), gridspec_kw={'height_ratios': [3, 1]})
-    
-
-    # GRÁFICO DO AJUSTE
-    ax1.errorbar(eixo_x, eixo_y, yerr=incerteza_y, xerr=incerteza_x, fmt='o', 
-                 color='black', ecolor='red', capsize=3, markersize=4, label='Dados Experimentais')
-    ax1.plot(eixo_x,eixo_y, 'b-', label='Ajuste Teórico')
-    ax1.set_ylabel('Intensidade')
-    ax1.set_title(f'Ajuste: a={a:.3f}, b={b:.3f}')
+    ax1.plot(x,y,'o',color='green',label='Dados')
+    ax1.plot(x_ajuste,y_ajuste,color='red',label=f'Ajuste: $y={a:.2f}x + {b:.2f}$', linewidth=0.5)
     ax1.legend()
-    ax1.grid(True, linestyle='--', alpha=0.6)
+    ax1.set_ylabel('Eixo Y')
+    ax1.set_title('Titulo')
+    ax1.grid(True,linestyle='-',alpha=0.7)
+    
+
+    y_ajuste=f(x,a,b)
+    distancias=y-y_ajuste
+
+    # Segundo subplot
+    ax2 = fig.add_axes([0, 0, 1, 0.25])
+    ax2.axhline(0, color='red', linestyle='-', linewidth=1.5)
 
 
-    # GRÁFICO DE RESIDUOS
-    ax2.errorbar(eixo_x, residuos, yerr=incerteza_y, fmt='o', color='black', ecolor='red', capsize=3, markersize=4)
-    ax2.axhline(0, color='blue', linestyle='--') # Linha do zero
-    ax2.set_xlabel('Número de Pixels')
-    ax2.set_ylabel('Resíduos')
-    ax2.grid(True, linestyle='--', alpha=0.6)
+    # ax2.errorbar(x, distancias, yerr=iy, fmt='o', color='black', ecolor='red', capsize=3)
+    
+    
+    ax2.set_xlabel('EIXO X')     #legenda eixo x
+    ax2.legend()
+    ax2.grid(True, linestyle='-', alpha=0.7)
 
-    #AJUSTE DE LAYOUT
-    plt.tight_layout()
-    plt.subplots_adjust(hspace=0.05) # Diminui espaço entre os gráficos
+    #chi^2
+    #chi2_valor = np.sum(((distancias) / iy) ** 2)
+    # Graus de liberdade
+    n_dados = len(y)
+    n_parametros = 2  #********substitua número de parâmetros
+    graus_de_liberdade = n_dados - n_parametros
+    # Valor crítico
+    alfa = 0.01
+    valor_critico = chi2.ppf(1 - alfa, graus_de_liberdade)
+
+    #print(f"Valor do χ²: {chi2_valor:.2f}")
+    print(f"Graus de liberdade: {graus_de_liberdade}")
+    print(f"Valor crítico (alfa={alfa}): {valor_critico:.2f}")
+    #if chi2_valor > valor_critico:
+    #    print("os dados diferem significativamente do modelo.")
+    #else:
+    #    print("os dados não diferem significativamente do modelo.")
+
     plt.show()
+
 
 
 main()
